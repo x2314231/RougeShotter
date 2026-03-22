@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5f0l4s2hhse3"
-path="res://.godot/imported/RougeShotter.icon.png-fa05fab5f3093dfd571e18b0edf7c592.ctex"
+path="res://.godot/imported/RougeShotter.icon.png-892ae02e694d78c7f47a225170af75ff.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Export/RougeShotter.icon.png"
-dest_files=["res://.godot/imported/RougeShotter.icon.png-fa05fab5f3093dfd571e18b0edf7c592.ctex"]
+source_file="res://docs/RougeShotter.icon.png"
+dest_files=["res://.godot/imported/RougeShotter.icon.png-892ae02e694d78c7f47a225170af75ff.ctex"]
 
 [params]
 

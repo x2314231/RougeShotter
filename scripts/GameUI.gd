@@ -1,5 +1,8 @@
 extends CanvasLayer
 
+## Web/HTML5 匯出時需內嵌 CJK 字型，否則中文會顯示成方塊（豆腐字）。
+const UI_FONT_PATH := "res://fonts/NotoSansTC-wght.ttf"
+
 signal upgrade_chosen(upgrade_id: String)
 signal restart_requested()
 signal pause_toggled(paused: bool)
@@ -26,12 +29,16 @@ var pause_panel: PanelContainer
 var resume_button: Button
 var _is_paused: bool = false
 
+## 內嵌 CJK 字型（僅 Control 可套用 Theme；CanvasLayer 無 theme，故用 override）
+var _ui_font: Font
+
 func _ready() -> void:
 	# 確保 UI 在 get_tree().paused = true 時仍能收到滑鼠/鍵盤輸入
 	set_process_input(true)
 	set_process_unhandled_input(true)
 	set_process(true)
 
+	_apply_embedded_cjk_font_theme()
 	_build_ui()
 	_bind_signals()
 	hide_upgrade_menu()
@@ -277,6 +284,20 @@ func _hide_pause() -> void:
 	if pause_panel:
 		pause_panel.visible = false
 
+
+func _apply_embedded_cjk_font_theme() -> void:
+	_ui_font = load(UI_FONT_PATH) as Font
+	if _ui_font == null:
+		push_warning("GameUI: 無法載入 UI 字型：%s（中文可能顯示為方塊）" % UI_FONT_PATH)
+
+
+func _apply_font_to_control(c: Control) -> void:
+	if _ui_font == null:
+		return
+	c.add_theme_font_override("font", _ui_font)
+	c.add_theme_font_size_override("font_size", 16)
+
+
 func _get_or_create_label(parent: Node, name: String, text: String, offset: Vector2) -> Label:
 	var l := parent.get_node_or_null(name) as Label
 	if l == null:
@@ -285,6 +306,7 @@ func _get_or_create_label(parent: Node, name: String, text: String, offset: Vect
 		parent.add_child(l)
 	l.text = text
 	l.position = offset
+	_apply_font_to_control(l)
 	return l
 
 func _get_or_create_button(parent: Node, name: String, text: String) -> Button:
@@ -294,4 +316,5 @@ func _get_or_create_button(parent: Node, name: String, text: String) -> Button:
 		b.name = name
 		parent.add_child(b)
 	b.text = text
+	_apply_font_to_control(b)
 	return b
