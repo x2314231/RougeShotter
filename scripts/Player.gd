@@ -71,9 +71,14 @@ func _process(delta: float) -> void:
 	if dir.length_squared() > 0.0001:
 		rotation = dir.angle()
 
-	# 射擊：滑鼠左鍵，或右側開火搖桿推動時（觸控）
+	# 射擊：滑鼠左鍵，或右側開火搖桿。Web 觸控會把單指模擬成滑鼠左鍵，推左搖桿移動時勿當成開火。
 	_time_since_shot += delta
-	var want_fire := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or MobileControls.is_fire_joystick_active()
+	var mouse_fire := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	if OS.get_name() == "Web" and DisplayServer.is_touchscreen_available():
+		if MobileControls.joystick_vector.length_squared() > 0.0001:
+			if not MobileControls.has_touch_aim and not MobileControls.is_fire_joystick_active():
+				mouse_fire = false
+	var want_fire := mouse_fire or MobileControls.is_fire_joystick_active()
 	if want_fire and _time_since_shot >= fire_cooldown:
 		_time_since_shot = 0.0
 		_shoot(dir)

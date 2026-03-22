@@ -71,15 +71,15 @@ func _build_ui() -> void:
 		hp_bar.name = "HpBar"
 		top_hud.add_child(hp_bar)
 	hp_bar.position = Vector2(0, 22)
-	hp_bar.custom_minimum_size = Vector2(240, 18)
-	hp_bar.size = Vector2(240, 18)
+	hp_bar.custom_minimum_size = Vector2(480, 18)
+	hp_bar.size = Vector2(480, 18)
 	hp_bar.show_percentage = false
 	hp_bar.max_value = 5.0
 	hp_bar.value = 5.0
 	hp_bar.step = 1.0
 
 	score_label = _get_or_create_label(top_hud, "ScoreLabel", "Score: 0", Vector2(0, 48))
-	wave_label = _get_or_create_label(top_hud, "WaveLabel", "Wave: 1/10", Vector2(0, 76))
+	wave_label = _get_or_create_label(top_hud, "WaveLabel", "Wave: 1/10", Vector2(0, 88))
 
 	# ----- Upgrade menu -----
 	upgrade_panel = get_node_or_null("UpgradePanel") as PanelContainer
@@ -297,7 +297,7 @@ func _apply_font_to_control(c: Control) -> void:
 	if _ui_font == null:
 		return
 	c.add_theme_font_override("font", _ui_font)
-	c.add_theme_font_size_override("font_size", 16)
+	c.add_theme_font_size_override("font_size", 36)
 
 
 func _get_or_create_label(parent: Node, name: String, text: String, offset: Vector2) -> Label:
@@ -320,4 +320,3 @@ func _get_or_create_button(parent: Node, name: String, text: String) -> Button:
 	b.text = text
 	_apply_font_to_control(b)
 	return b
-

@@ -1,9 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bqbxq1ed1sl2s"]
 
-[ext_resource type="Script" path="res://scripts/GameUI.gd" id="1_1"]
+[ext_resource type="Script" uid="uid://hrugrwy3qkio" path="res://scripts/GameUI.gd" id="1_1"]
 
-[node name="GameUI" type="CanvasLayer"]
+[node name="GameUI" type="CanvasLayer" unique_id=928726624]
 layer = 100
 script = ExtResource("1_1")
-pause_mode = 1
-

@@ -57,36 +57,57 @@ func _draw() -> void:
 	draw_circle(c + _knob_offset, knob_radius, knob)
 
 
-func _gui_input(event: InputEvent) -> void:
+## Web／行動版：觸控在 _gui_input 常無連續 Drag，改在 _input 統一處理（視窗座標 → 搖桿本地座標）。
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
 	if event is InputEventScreenTouch:
 		var st := event as InputEventScreenTouch
+		var pos: Vector2 = st.position
 		if st.pressed:
 			if _active_index != -1:
 				return
+			if not get_global_rect().has_point(pos):
+				return
 			_active_index = st.index
 			_set_finger_index(st.index)
-			_update_knob_from_local(st.position)
-			accept_event()
+			var local_p: Vector2 = get_global_transform_with_canvas().affine_inverse() * pos
+			_update_knob_from_local(local_p)
+			get_viewport().set_input_as_handled()
 		else:
 			if st.index == _active_index:
 				_reset_joystick()
-				accept_event()
+				get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag:
+		if _active_index < 0:
+			return
 		var sd := event as InputEventScreenDrag
-		if sd.index == _active_index:
-			_update_knob_from_local(sd.position)
-			accept_event()
+		if sd.index != _active_index:
+			return
+		var local_d: Vector2 = get_global_transform_with_canvas().affine_inverse() * sd.position
+		_update_knob_from_local(local_d)
+		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_LEFT:
-			if mb.pressed:
-				_active_index = -2
-				_set_finger_index(-2)
-				_update_knob_from_local(mb.position)
-			else:
-				if _active_index == -2:
-					_reset_joystick()
-			accept_event()
+		if mb.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if mb.pressed:
+			if _active_index != -1:
+				return
+			if not get_global_rect().has_point(get_global_mouse_position()):
+				return
+			_active_index = -2
+			_set_finger_index(-2)
+			_update_knob_from_local(get_local_mouse_position())
+			get_viewport().set_input_as_handled()
+		else:
+			if _active_index == -2:
+				_reset_joystick()
+				get_viewport().set_input_as_handled()
+	elif _active_index == -2 and event is InputEventMouseMotion:
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			_update_knob_from_local(get_local_mouse_position())
+			get_viewport().set_input_as_handled()
 
 
 func _set_finger_index(i: int) -> void:
