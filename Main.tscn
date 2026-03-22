@@ -1,46 +1,40 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://ttqrn2hxy055"]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_1"]
 [ext_resource type="PackedScene" path="res://scenes/GameUI.tscn" id="2_1"]
 [ext_resource type="PackedScene" path="res://scenes/TouchJoystick.tscn" id="2_touch"]
 [ext_resource type="PackedScene" path="res://scenes/WorldBounds.tscn" id="3_1"]
-[ext_resource type="Script" path="res://scripts/LevelManager.gd" id="4_1"]
-[ext_resource type="Script" path="res://scripts/CameraShake.gd" id="5_1"]
-[ext_resource type="Script" path="res://scripts/TerrainBackground.gd" id="6_1"]
+[ext_resource type="Script" uid="uid://cpikjig7g0ejy" path="res://scripts/LevelManager.gd" id="4_1"]
+[ext_resource type="Script" uid="uid://2c8ggct3br4c" path="res://scripts/CameraShake.gd" id="5_1"]
+[ext_resource type="Script" uid="uid://sngb507byu8b" path="res://scripts/TerrainBackground.gd" id="6_1"]
 
-[node name="Main" type="Node2D"]
-script = null
+[node name="Main" type="Node2D" unique_id=211565960]
 
-[node name="TerrainLayer" type="CanvasLayer" parent="."]
+[node name="TerrainLayer" type="CanvasLayer" parent="." unique_id=1125699079]
 layer = -10
 
-[node name="TerrainBackground" type="Control" parent="TerrainLayer"]
+[node name="TerrainBackground" type="Control" parent="TerrainLayer" unique_id=179367861]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("6_1")
 
-[node name="Player" parent="." instance=ExtResource("1_1")]
-position = Vector2(0, 0)
+[node name="Player" parent="." unique_id=247899545 instance=ExtResource("1_1")]
 
-[node name="WorldBounds" parent="." instance=ExtResource("3_1")]
+[node name="WorldBounds" parent="." unique_id=494402820 instance=ExtResource("3_1")]
 
-[node name="GameUI" parent="." instance=ExtResource("2_1")]
+[node name="GameUI" parent="." unique_id=1328676095 instance=ExtResource("2_1")]
 
-[node name="TouchControlsLayer" parent="." instance=ExtResource("2_touch")]
+[node name="TouchControlsLayer" parent="." unique_id=1423132547 instance=ExtResource("2_touch")]
 
-[node name="LevelManager" type="Node" parent="."]
+[node name="LevelManager" type="Node" parent="." unique_id=382423389]
 script = ExtResource("4_1")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-current = true
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1663260856]
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
 script = ExtResource("5_1")
-
