@@ -66,15 +66,15 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if is_dead:
 		return
-	# 滑鼠瞄準（旋轉整個角色，讓 Muzzle 方向跟著轉）
-	var mouse_pos := get_global_mouse_position()
-	var dir := mouse_pos - global_position
+	# 瞄準：滑鼠／觸控第二指；僅搖桿時（觸控網頁）用移動方向當炮口方向
+	var dir := _aim_world_delta()
 	if dir.length_squared() > 0.0001:
 		rotation = dir.angle()
 
-	# 射擊：按住滑鼠左鍵，依火力冷卻連續射擊
+	# 射擊：滑鼠左鍵，或右側開火搖桿推動時（觸控）
 	_time_since_shot += delta
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and _time_since_shot >= fire_cooldown:
+	var want_fire := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or MobileControls.is_fire_joystick_active()
+	if want_fire and _time_since_shot >= fire_cooldown:
 		_time_since_shot = 0.0
 		_shoot(dir)
 
@@ -86,10 +86,9 @@ func _process(delta: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if is_dead:
 		return
-	# WASD 移動
-	var input_x := (1.0 if Input.is_key_pressed(KEY_D) else 0.0) - (1.0 if Input.is_key_pressed(KEY_A) else 0.0)
-	var input_y := (1.0 if Input.is_key_pressed(KEY_S) else 0.0) - (1.0 if Input.is_key_pressed(KEY_W) else 0.0)
-	var input_vec := Vector2(input_x, input_y)
+	# 鍵盤（WASD＋方向鍵）＋ 虛擬搖桿
+	var kb := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var input_vec := kb + MobileControls.joystick_vector
 	if input_vec.length_squared() > 1.0:
 		input_vec = input_vec.normalized()
 
@@ -105,6 +104,20 @@ func _physics_process(_delta: float) -> void:
 		var max_pos: Vector2 = cam.global_position + half
 		global_position.x = clamp(global_position.x, min_pos.x, max_pos.x)
 		global_position.y = clamp(global_position.y, min_pos.y, max_pos.y)
+
+
+func _aim_world_delta() -> Vector2:
+	# 右側開火搖桿：推動方向 = 炮口／子彈方向（優先於點擊瞄準）
+	if MobileControls.is_fire_joystick_active():
+		return MobileControls.fire_joystick_vector * 200.0
+	if MobileControls.has_touch_aim:
+		return MobileControls.aim_world_pos - global_position
+	# 僅左搖桿、無右搖桿與觸控瞄準時：炮口與移動同向
+	if OS.get_name() == "Web" and DisplayServer.is_touchscreen_available():
+		if MobileControls.joystick_vector.length_squared() > 0.01:
+			return MobileControls.joystick_vector * 200.0
+	return get_global_mouse_position() - global_position
+
 
 func _shoot(raw_dir: Vector2) -> void:
 	if raw_dir.length_squared() < 0.0001:
