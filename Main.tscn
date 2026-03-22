@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://ttqrn2hxy055"]
+
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_1"]
+[ext_resource type="PackedScene" path="res://scenes/GameUI.tscn" id="2_1"]
+[ext_resource type="PackedScene" path="res://scenes/WorldBounds.tscn" id="3_1"]
+[ext_resource type="Script" uid="uid://cpikjig7g0ejy" path="res://scripts/LevelManager.gd" id="4_1"]
+[ext_resource type="Script" uid="uid://2c8ggct3br4c" path="res://scripts/CameraShake.gd" id="5_1"]
+[ext_resource type="Script" uid="uid://sngb507byu8b" path="res://scripts/TerrainBackground.gd" id="6_1"]
+
+[node name="Main" type="Node2D" unique_id=342113554]
+
+[node name="TerrainLayer" type="CanvasLayer" parent="." unique_id=1817768546]
+layer = -10
+
+[node name="TerrainBackground" type="Control" parent="TerrainLayer" unique_id=1837766919]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_1")
+
+[node name="Player" parent="." unique_id=1312842481 instance=ExtResource("1_1")]
+
+[node name="WorldBounds" parent="." unique_id=1459695231 instance=ExtResource("3_1")]
+
+[node name="GameUI" parent="." unique_id=983549965 instance=ExtResource("2_1")]
+
+[node name="LevelManager" type="Node" parent="." unique_id=802284408]
+script = ExtResource("4_1")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=762569877]
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0
+script = ExtResource("5_1")

@@ -1,0 +1,56 @@
+[gd_scene load_steps=5 format=3]
+
+[sub_resource type="RectangleShape2D" id="RectShape_Left"]
+extents = Vector2(20, 900)
+
+[sub_resource type="RectangleShape2D" id="RectShape_Right"]
+extents = Vector2(20, 900)
+
+[sub_resource type="RectangleShape2D" id="RectShape_Top"]
+extents = Vector2(1260, 20)
+
+[sub_resource type="RectangleShape2D" id="RectShape_Bottom"]
+extents = Vector2(1260, 20)
+
+[node name="WorldBounds" type="Node2D"]
+
+[node name="Left" type="StaticBody2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+groups = ["wall"]
+script = null
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="./Left"]
+position = Vector2(-1250, 0)
+shape = SubResource("RectShape_Left")
+
+[node name="Right" type="StaticBody2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+groups = ["wall"]
+script = null
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="./Right"]
+position = Vector2(1250, 0)
+shape = SubResource("RectShape_Right")
+
+[node name="Top" type="StaticBody2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+groups = ["wall"]
+script = null
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="./Top"]
+position = Vector2(0, -900)
+shape = SubResource("RectShape_Top")
+
+[node name="Bottom" type="StaticBody2D" parent="."]
+collision_layer = 4
+collision_mask = 8
+groups = ["wall"]
+script = null
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="./Bottom"]
+position = Vector2(0, 900)
+shape = SubResource("RectShape_Bottom")
+

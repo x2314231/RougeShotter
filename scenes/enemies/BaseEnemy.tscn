@@ -1,0 +1,29 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/BaseEnemy.gd" id="1_1"]
+[ext_resource type="Script" path="res://scripts/DebugCircleVisual.gd" id="2_1"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_a" radius=18.0]
+[sub_resource type="CircleShape2D" id="CircleShape2D_b" radius=16.0]
+
+[node name="BaseEnemy" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_a")
+
+[node name="HitArea" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 1
+monitoring = true
+
+[node name="HitShape" type="CollisionShape2D" parent="HitArea"]
+shape = SubResource("CircleShape2D_b")
+
+[node name="Visual" type="Node2D" parent="."]
+script = ExtResource("2_1")
+radius = 18.0
+fill_color = Color(1, 0, 0, 1)
+

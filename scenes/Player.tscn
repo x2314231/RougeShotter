@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/Player.gd" id="1_1"]
+[ext_resource type="Script" path="res://scripts/DebugCircleVisual.gd" id="2_1"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_a" radius=14.0]
+[sub_resource type="CircleShape2D" id="CircleShape2D_b" radius=16.0]
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 2
+script = ExtResource("1_1")
+max_hp = 5
+fire_cooldown = 0.42
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_a")
+
+[node name="Muzzle" type="Marker2D" parent="."]
+position = Vector2(24, 0)
+
+[node name="HurtArea" type="Area2D" parent="."]
+monitoring = true
+monitorable = false
+collision_layer = 1
+collision_mask = 2
+
+[node name="HurtShape" type="CollisionShape2D" parent="HurtArea"]
+shape = SubResource("CircleShape2D_b")
+
+[node name="Visual" type="Node2D" parent="."]
+script = ExtResource("2_1")
+radius = 14.0
+fill_color = Color(0.2, 0.8, 1.0, 1.0)
+
