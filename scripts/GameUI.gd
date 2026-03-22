@@ -55,11 +55,13 @@ func _build_ui() -> void:
 		top_hud = Control.new()
 		top_hud.name = "TopHUD"
 		add_child(top_hud)
-		top_hud.anchors_preset = 15
+		# 勿用 PRESET_FULL_RECT(15)：會鋪滿全螢幕並攔截觸控，導致下層搖桿（較低 CanvasLayer）永遠收不到觸控
+		top_hud.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		top_hud.offset_left = 10
 		top_hud.offset_top = 10
-		top_hud.offset_right = 420
-		top_hud.offset_bottom = 80
+		# 錨點全在左上時：right/bottom 為相對父視窗左／上邊的絕對位置，寬高 = right-left、bottom-top
+		top_hud.offset_right = 10 + 420
+		top_hud.offset_bottom = 10 + 80
 
 	hp_label = _get_or_create_label(top_hud, "HpLabel", "HP: 5/5", Vector2(0, 0))
 
@@ -318,3 +320,4 @@ func _get_or_create_button(parent: Node, name: String, text: String) -> Button:
 	b.text = text
 	_apply_font_to_control(b)
 	return b
+
