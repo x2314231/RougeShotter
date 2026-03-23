@@ -40,19 +40,16 @@ func _update_center() -> void:
 ## - 搖桿是否接收觸控（在 _input 判斷）
 ## - MobileControls 是否排除「空白處觸控瞄準」（在 _refresh_joystick_rect 設定）
 func _get_activation_rect() -> Rect2:
-	var r := get_global_rect()
-	var vp := get_viewport_rect()
-	# 視窗左上為 (0,0) 的座標系；EventScreenTouch.position 也使用此座標。
-	if vp.size.x <= 0.0 or vp.size.y <= 0.0:
-		return r
-	var half_w := vp.size.x * 0.5
-	var half_h := vp.size.y * 0.5
-	var clip: Rect2
+	var vr := get_viewport().get_visible_rect()
+	# EventScreenTouch.position 是以 viewport/螢幕座標為準；用 visible_rect 做切分能更貼近實際顯示範圍。
+	if vr.size.x <= 0.0 or vr.size.y <= 0.0:
+		return Rect2()
+	var half_w := vr.size.x * 0.5
+	var half_h := vr.size.y * 0.5
+	# 只用「畫面底部 + 左/右半螢幕」當作判斷依據，避免受搖桿節點自身全域 rect 影響
 	if role == Role.MOVE:
-		clip = Rect2(vp.position.x, vp.position.y + half_h, half_w, half_h)
-	else:
-		clip = Rect2(vp.position.x + half_w, vp.position.y + half_h, half_w, half_h)
-	return r.intersection(clip)
+		return Rect2(vr.position.x, vr.position.y + half_h, half_w, half_h)
+	return Rect2(vr.position.x + half_w, vr.position.y + half_h, half_w, half_h)
 
 
 func _refresh_joystick_rect() -> void:

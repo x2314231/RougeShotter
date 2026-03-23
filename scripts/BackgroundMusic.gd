@@ -18,9 +18,7 @@ var _streams: Array[AudioStream] = []
 var _current_stream_idx: int = -1
 
 # Web/行動裝置常見狀況：切到背景/離開頁面時音樂還會繼續播放。
-# 用 Application 通知暫停/停止，離開就關掉，回來則可選擇恢復。
-var _bgm_was_playing_before_suspend := false
-var _bgm_saved_playback_pos_sec := 0.0
+# 用 Application 通知在離開時直接停止，不做自動恢復。
 
 
 func _ready() -> void:
@@ -110,13 +108,5 @@ func _notification(what: int) -> void:
 	# 手機瀏覽器離開/切到背景時可能觸發這些通知
 	match what:
 		NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED:
-			if playing:
-				_bgm_was_playing_before_suspend = true
-				_bgm_saved_playback_pos_sec = get_playback_position()
-			else:
-				_bgm_was_playing_before_suspend = false
+			# 離開事件：直接停止 BGM，避免背景持續播放
 			stop()
-		NOTIFICATION_APPLICATION_FOCUS_IN, NOTIFICATION_APPLICATION_RESUMED:
-			if _bgm_was_playing_before_suspend and stream != null:
-				play(_bgm_saved_playback_pos_sec)
-			_bgm_was_playing_before_suspend = false

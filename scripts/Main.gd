@@ -133,4 +133,3 @@ func _apply_brightness_factor(f: float) -> void:
 	# CanvasModulate 會把所有 2D 畫面顏色乘上這個值（用於模擬亮度調整）
 	if _brightness_modulate:
 		_brightness_modulate.color = Color(f, f, f, 1.0)
-
