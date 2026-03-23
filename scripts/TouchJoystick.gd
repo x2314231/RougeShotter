@@ -76,6 +76,7 @@ func _draw() -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
+	var has_touch := DisplayServer.is_touchscreen_available()
 	if event is InputEventScreenTouch:
 		var st := event as InputEventScreenTouch
 		var pos: Vector2 = st.position
@@ -103,7 +104,7 @@ func _input(event: InputEvent) -> void:
 		var r2 := get_global_rect()
 		var local_d: Vector2 = sd.position - r2.position
 		_update_knob_from_local(local_d)
-	elif event is InputEventMouseButton:
+	elif not has_touch and event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index != MOUSE_BUTTON_LEFT:
 			return
@@ -118,7 +119,7 @@ func _input(event: InputEvent) -> void:
 		else:
 			if _active_index == -2:
 				_reset_joystick()
-	elif _active_index == -2 and event is InputEventMouseMotion:
+	elif not has_touch and _active_index == -2 and event is InputEventMouseMotion:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			_update_knob_from_local(get_local_mouse_position())
 
