@@ -1,17 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://touch_joystick_layer"]
+[gd_scene format=3 uid="uid://b456ag2k3dogc"]
 
-[ext_resource type="Script" path="res://scripts/TouchJoystick.gd" id="1_joystick"]
+[ext_resource type="Script" uid="uid://yc870my8v16" path="res://scripts/TouchJoystick.gd" id="1_joystick"]
 
-[node name="TouchControlsLayer" type="CanvasLayer"]
+[node name="TouchControlsLayer" type="CanvasLayer" unique_id=1050890245]
 layer = 8
-pause_mode = 1
 
-[node name="MoveJoystick" type="Control" parent="."]
-layout_mode = 1
+[node name="MoveJoystick" type="Control" parent="." unique_id=239784818]
+layout_mode = 3
 anchors_preset = 2
-anchor_left = 0.0
 anchor_top = 1.0
-anchor_right = 0.0
 anchor_bottom = 1.0
 offset_left = 12.0
 offset_top = -220.0
@@ -19,13 +16,12 @@ offset_right = 232.0
 offset_bottom = -12.0
 grow_horizontal = 0
 grow_vertical = 0
-mouse_filter = 0
 script = ExtResource("1_joystick")
 outer_radius = 144.0
 knob_radius = 44.0
 
-[node name="FireJoystick" type="Control" parent="."]
-layout_mode = 1
+[node name="FireJoystick" type="Control" parent="." unique_id=1728423427]
+layout_mode = 3
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
@@ -37,7 +33,6 @@ offset_right = -12.0
 offset_bottom = -12.0
 grow_horizontal = 0
 grow_vertical = 0
-mouse_filter = 0
 script = ExtResource("1_joystick")
 role = 1
 outer_radius = 144.0

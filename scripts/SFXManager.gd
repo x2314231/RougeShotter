@@ -2,6 +2,7 @@ extends Node
 ## 一次性音效（SFX）管理器
 ## 會嘗試載入 res://audio/sfx/ 下的音效；若檔案不存在則安靜跳過。
 
+@export var sfx_volume_db: float = 6.0
 @export var shoot_stream_path: String = "res://audio/sfx/player_shoot.ogg"
 @export var player_hurt_stream_path: String = "res://audio/sfx/player_hurt.ogg"
 @export var enemy_hurt_stream_path: String = "res://audio/sfx/enemy_hurt.ogg"
@@ -25,15 +26,19 @@ func _load_stream_with_fallback(p: String) -> AudioStream:
 	if s != null:
 		return s
 
-	# 若你放的是 wav 檔，預設用 ogg 路徑抓不到時，做最簡單的副檔名 fallback
-	var alt := p
+	# 支援 ogg / wav / mp3 的副檔名 fallback
+	var candidates: Array[String] = []
 	if p.ends_with(".ogg"):
-		alt = p.trim_suffix(".ogg") + ".wav"
+		candidates = [p.trim_suffix(".ogg") + ".wav", p.trim_suffix(".ogg") + ".mp3"]
 	elif p.ends_with(".wav"):
-		alt = p.trim_suffix(".wav") + ".ogg"
+		candidates = [p.trim_suffix(".wav") + ".ogg", p.trim_suffix(".wav") + ".mp3"]
+	elif p.ends_with(".mp3"):
+		candidates = [p.trim_suffix(".mp3") + ".ogg", p.trim_suffix(".mp3") + ".wav"]
 
-	if alt != p:
+	for alt in candidates:
 		s = load(alt) as AudioStream
+		if s != null:
+			return s
 	return s
 
 
@@ -57,6 +62,7 @@ func _play(stream: AudioStream, at: Vector2) -> void:
 		return
 	var p := AudioStreamPlayer2D.new()
 	p.stream = stream
+	p.volume_db = sfx_volume_db
 	p.global_position = at
 	# 使用預設 bus（通常是 Master），音量由 MainMenu 設定的 bus volume 影響
 	add_child(p)

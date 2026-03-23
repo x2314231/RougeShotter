@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_1"]
 [ext_resource type="PackedScene" path="res://scenes/GameUI.tscn" id="2_1"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/TerrainBackground.gd" id="6_1"]
 [ext_resource type="Script" path="res://scripts/Main.gd" id="main_script"]
 [ext_resource type="Script" path="res://scripts/SFXManager.gd" id="sfx_script"]
+[ext_resource type="Script" path="res://scripts/BackgroundMusic.gd" id="bgm_script"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("main_script")
@@ -54,4 +55,7 @@ script = ExtResource("5_1")
 
 [node name="SFX" type="Node" parent="."]
 script = ExtResource("sfx_script")
+
+[node name="BGM" type="AudioStreamPlayer" parent="."]
+script = ExtResource("bgm_script")
 

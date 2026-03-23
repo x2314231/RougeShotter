@@ -1,120 +1,84 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://db3fpjfpk3uog"]
 
-[ext_resource type="Script" path="res://scripts/MainMenu.gd" id="1_1"]
+[ext_resource type="Script" uid="uid://bvqudh34hgkmu" path="res://scripts/MainMenu.gd" id="1_1"]
 
-[node name="MainMenuLayer" type="CanvasLayer"]
+[node name="MainMenuLayer" type="CanvasLayer" unique_id=1294494098]
 layer = 200
-pause_mode = 1
 script = ExtResource("1_1")
 
-[node name="MenuPanel" type="PanelContainer" parent="."]
-layout_mode = 3
+[node name="MenuPanel" type="PanelContainer" parent="." unique_id=1554615050]
 anchors_preset = 15
-pause_mode = 1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
-mouse_filter = 0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MenuPanel"]
-layout_mode = 1
-anchors_preset = 1
-pause_mode = 1
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -160.0
-offset_right = 200.0
-offset_bottom = 160.0
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuPanel" unique_id=1982639869]
+layout_mode = 2
 alignment = 1
 
-[node name="StartButton" type="Button" parent="MenuPanel/VBoxContainer"]
-pause_mode = 1
+[node name="StartButton" type="Button" parent="MenuPanel/VBoxContainer" unique_id=1921433232]
+layout_mode = 2
 text = "開始遊玩"
 
-[node name="OptionsButton" type="Button" parent="MenuPanel/VBoxContainer"]
-pause_mode = 1
+[node name="OptionsButton" type="Button" parent="MenuPanel/VBoxContainer" unique_id=1822106832]
+layout_mode = 2
 text = "選項"
 
-[node name="ExitButton" type="Button" parent="MenuPanel/VBoxContainer"]
-pause_mode = 1
+[node name="ExitButton" type="Button" parent="MenuPanel/VBoxContainer" unique_id=1415039127]
+layout_mode = 2
 text = "退出"
 
-[node name="OptionsPanel" type="PanelContainer" parent="."]
+[node name="OptionsPanel" type="PanelContainer" parent="." unique_id=433119232]
 visible = false
-layout_mode = 3
 anchors_preset = 15
-pause_mode = 1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
-mouse_filter = 0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="OptionsPanel"]
-layout_mode = 1
-anchors_preset = 1
-pause_mode = 1
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -240.0
-offset_top = -220.0
-offset_right = 240.0
-offset_bottom = 220.0
+[node name="VBoxContainer" type="VBoxContainer" parent="OptionsPanel" unique_id=498743479]
+layout_mode = 2
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="OptionsPanel/VBoxContainer"]
-pause_mode = 1
+[node name="TitleLabel" type="Label" parent="OptionsPanel/VBoxContainer" unique_id=1466199640]
+layout_mode = 2
 text = "選項"
 
-[node name="VolumeRow" type="HBoxContainer" parent="OptionsPanel/VBoxContainer"]
-pause_mode = 1
+[node name="VolumeRow" type="HBoxContainer" parent="OptionsPanel/VBoxContainer" unique_id=1513296949]
+layout_mode = 2
 
-[node name="VolumeLabel" type="Label" parent="OptionsPanel/VBoxContainer/VolumeRow"]
-pause_mode = 1
+[node name="VolumeLabel" type="Label" parent="OptionsPanel/VBoxContainer/VolumeRow" unique_id=1209720149]
+layout_mode = 2
 text = "音量"
 
-[node name="VolumeSlider" type="HSlider" parent="OptionsPanel/VBoxContainer/VolumeRow"]
-pause_mode = 1
-min_value = 1.0
-max_value = 100.0
-step = 1.0
-value = 100.0
+[node name="VolumeSlider" type="HSlider" parent="OptionsPanel/VBoxContainer/VolumeRow" unique_id=795003784]
 custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+min_value = 1.0
+value = 100.0
 
-[node name="VolumeValueLabel" type="Label" parent="OptionsPanel/VBoxContainer/VolumeRow"]
-pause_mode = 1
+[node name="VolumeValueLabel" type="Label" parent="OptionsPanel/VBoxContainer/VolumeRow" unique_id=587246247]
+layout_mode = 2
 text = "音量: 100%"
 
-[node name="BrightnessRow" type="HBoxContainer" parent="OptionsPanel/VBoxContainer"]
-pause_mode = 1
+[node name="BrightnessRow" type="HBoxContainer" parent="OptionsPanel/VBoxContainer" unique_id=277266142]
+layout_mode = 2
 
-[node name="BrightnessLabel" type="Label" parent="OptionsPanel/VBoxContainer/BrightnessRow"]
-pause_mode = 1
+[node name="BrightnessLabel" type="Label" parent="OptionsPanel/VBoxContainer/BrightnessRow" unique_id=374175765]
+layout_mode = 2
 text = "亮度"
 
-[node name="BrightnessSlider" type="HSlider" parent="OptionsPanel/VBoxContainer/BrightnessRow"]
-pause_mode = 1
-min_value = 1.0
-max_value = 100.0
-step = 1.0
-value = 100.0
+[node name="BrightnessSlider" type="HSlider" parent="OptionsPanel/VBoxContainer/BrightnessRow" unique_id=1755122888]
 custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+min_value = 1.0
+value = 100.0
 
-[node name="BrightnessValueLabel" type="Label" parent="OptionsPanel/VBoxContainer/BrightnessRow"]
-pause_mode = 1
+[node name="BrightnessValueLabel" type="Label" parent="OptionsPanel/VBoxContainer/BrightnessRow" unique_id=1306117767]
+layout_mode = 2
 text = "亮度: 100%"
 
-[node name="BackButton" type="Button" parent="OptionsPanel/VBoxContainer"]
-pause_mode = 1
+[node name="BackButton" type="Button" parent="OptionsPanel/VBoxContainer" unique_id=519376797]
+layout_mode = 2
 text = "返回"
-

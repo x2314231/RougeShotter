@@ -351,4 +351,3 @@ func _get_or_create_button(parent: Node, name: String, text: String) -> Button:
 	b.text = text
 	_apply_font_to_control(b)
 	return b
-

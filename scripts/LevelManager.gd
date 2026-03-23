@@ -2,6 +2,8 @@ extends Node
 
 var player: Node
 var ui: Node
+var _bgm: Node
+var _bgm_played_wave: int = -1
 
 @export var total_waves: int = 10
 const GROUP_ENEMY := "enemy"
@@ -59,6 +61,8 @@ func _ready() -> void:
 		push_error("找不到 GameUI，請確認 Main.tscn 內有節點名稱 GameUI。")
 		return
 
+	_bgm = get_node_or_null("../BGM") as Node
+
 	_cache_player_baselines()
 	_connect_signals()
 	ui.set_wave(current_wave, total_waves)
@@ -74,6 +78,13 @@ func _process(delta: float) -> void:
 	_time_until_next_batch -= delta
 	if _time_until_next_batch > 0.0:
 		return
+
+	# 每波第一次生成前，隨機播放一首 BGM（並嘗試循環播放）
+	if current_wave != _bgm_played_wave:
+		if _bgm != null and _bgm.has_method("play_random_bgm"):
+			_bgm.call("play_random_bgm")
+		_bgm_played_wave = current_wave
+
 	_spawn_current_batch()
 	_spawn_batch_index += 1
 	if _spawn_batch_index >= _spawn_batches.size():
