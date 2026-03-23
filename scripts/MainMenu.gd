@@ -9,6 +9,9 @@ signal brightness_changed(brightness_factor: float)
 
 const UI_FONT_PATH := "res://fonts/NotoSansTC-wght.ttf"
 const UI_FONT_SIZE := 32
+const MENU_BUTTON_FONT_SIZE := 46
+const MENU_BUTTON_MIN_WIDTH := 360.0
+const MENU_BUTTON_MIN_HEIGHT := 72.0
 
 @onready var _menu_panel: Control = $MenuPanel
 @onready var _options_panel: Control = $OptionsPanel
@@ -32,6 +35,8 @@ var _suppress_slider_signals := false
 func _ready() -> void:
 	_ui_font = load(UI_FONT_PATH) as Font
 	_apply_font_recursive(self)
+	_setup_main_menu_buttons()
+	_setup_options_menu_layout()
 
 	# 確保主選單在 get_tree().paused = true 時仍能接到觸控/滑鼠事件
 	set_process_input(true)
@@ -64,6 +69,38 @@ func _ready() -> void:
 
 	# 僅保險：若 paused 狀態下 Button 的 pressed 沒收到觸控，
 	# 改用下方自訂 _unhandled_input 依座標直接觸發，確保三顆按鈕可用。
+
+
+func _setup_main_menu_buttons() -> void:
+	var menu_buttons: Array[Button] = [_start_button, _options_button, _exit_button]
+	for btn in menu_buttons:
+		if btn == null:
+			continue
+		# 主選單三顆按鈕放大且水平置中
+		btn.add_theme_font_size_override("font_size", MENU_BUTTON_FONT_SIZE)
+		btn.custom_minimum_size = Vector2(MENU_BUTTON_MIN_WIDTH, MENU_BUTTON_MIN_HEIGHT)
+		btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+
+func _setup_options_menu_layout() -> void:
+	var options_vbox := $OptionsPanel/VBoxContainer as VBoxContainer
+	var title := $OptionsPanel/VBoxContainer/TitleLabel as Label
+	var volume_row := $OptionsPanel/VBoxContainer/VolumeRow as HBoxContainer
+	var brightness_row := $OptionsPanel/VBoxContainer/BrightnessRow as HBoxContainer
+
+	if options_vbox != null:
+		options_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	if title != null:
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	if volume_row != null:
+		volume_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		volume_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	if brightness_row != null:
+		brightness_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		brightness_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	if _back_button != null:
+		_back_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 
 func _input(event: InputEvent) -> void:
