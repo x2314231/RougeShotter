@@ -77,6 +77,12 @@ func _input(event: InputEvent) -> void:
 		return
 	if _fire_joystick_rect.has_point(pos):
 		return
+
+	# 搖桿手指尚未離開前，其他指頭的點擊/拖曳不要覆蓋瞄準方向。
+	# 讓玩家能穩定「按住搖桿 → 子彈方向一致」，避免被額外觸控搶走訊號。
+	var any_joystick_finger_active := (_joystick_finger_index != -1 or _fire_joystick_finger_index != -1)
+	if any_joystick_finger_active:
+		return
 	var world := _screen_to_world(pos)
 	if event is InputEventScreenTouch:
 		var st := event as InputEventScreenTouch

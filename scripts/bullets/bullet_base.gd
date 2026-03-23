@@ -112,6 +112,15 @@ func _handle_hit(collider: Object, normal: Vector2) -> void:
 		queue_free()
 		return
 
+	# 粉紅子彈（enemy 子彈）需求：即使物理上碰到敵人，也要允許穿透所有敵人。
+	# 因為某些情況下（layer/碰撞例外/網頁觸控）仍可能發生 enemy<->enemy 碰撞，
+	# 這裡直接忽略「敵人」碰撞，不釋放子彈，並把它稍微往前推開，避免卡住。
+	if bullet_owner == "enemy" and collider.is_in_group(GROUP_ENEMY):
+		if collider is CollisionObject2D:
+			add_collision_exception_with(collider as CollisionObject2D)
+		global_position += direction * 2.0
+		return
+
 	if bullet_owner == "player":
 		if collider.is_in_group(GROUP_ENEMY):
 			var eid: int = collider.get_instance_id()

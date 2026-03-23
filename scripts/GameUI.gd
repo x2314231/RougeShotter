@@ -6,6 +6,7 @@ const UI_FONT_PATH := "res://fonts/NotoSansTC-wght.ttf"
 signal upgrade_chosen(upgrade_id: String)
 signal restart_requested()
 signal pause_toggled(paused: bool)
+signal back_to_main_menu_requested()
 
 var hp_label: Label
 var hp_bar: ProgressBar
@@ -27,6 +28,8 @@ var victory_label: Label
 
 var pause_panel: PanelContainer
 var resume_button: Button
+var pause_toggle_button: Button
+var back_to_main_menu_button: Button
 var _is_paused: bool = false
 
 ## 內嵌 CJK 字型（僅 Control 可套用 Theme；CanvasLayer 無 theme，故用 override）
@@ -71,15 +74,23 @@ func _build_ui() -> void:
 		hp_bar.name = "HpBar"
 		top_hud.add_child(hp_bar)
 	hp_bar.position = Vector2(0, 22)
-	hp_bar.custom_minimum_size = Vector2(480, 18)
-	hp_bar.size = Vector2(480, 18)
+	hp_bar.custom_minimum_size = Vector2(240, 18)
+	hp_bar.size = Vector2(240, 18)
 	hp_bar.show_percentage = false
 	hp_bar.max_value = 5.0
 	hp_bar.value = 5.0
 	hp_bar.step = 1.0
 
 	score_label = _get_or_create_label(top_hud, "ScoreLabel", "Score: 0", Vector2(0, 48))
-	wave_label = _get_or_create_label(top_hud, "WaveLabel", "Wave: 1/10", Vector2(0, 88))
+	wave_label = _get_or_create_label(top_hud, "WaveLabel", "Wave: 1/10", Vector2(0, 76))
+
+	# ----- Pause button (mobile/web) -----
+	# 桌面版用 ESC；手機/Web 顯示右上角暫停按鈕。
+	pause_toggle_button = _get_or_create_button(top_hud, "PauseToggleButton", "暫停")
+	pause_toggle_button.position = Vector2(300, 0)
+	pause_toggle_button.custom_minimum_size = Vector2(110, 40)
+	pause_toggle_button.visible = OS.get_name() == "Web" or DisplayServer.is_touchscreen_available()
+	pause_toggle_button.pressed.connect(func(): _on_pause_toggle_pressed())
 
 	# ----- Upgrade menu -----
 	upgrade_panel = get_node_or_null("UpgradePanel") as PanelContainer
@@ -203,6 +214,7 @@ func _build_ui() -> void:
 
 	_get_or_create_label(pause_vbox, "PauseLabel", "已暫停（ESC 解除）", Vector2.ZERO)
 	resume_button = _get_or_create_button(pause_vbox, "ResumeButton", "繼續")
+	back_to_main_menu_button = _get_or_create_button(pause_vbox, "BackToMainMenuButton", "退回主選單")
 
 func _bind_signals() -> void:
 	btn1.pressed.connect(func(): _choose_from_button(btn1))
@@ -211,6 +223,10 @@ func _bind_signals() -> void:
 	restart_button.pressed.connect(func(): restart_requested.emit())
 	restart_button2.pressed.connect(func(): restart_requested.emit())
 	resume_button.pressed.connect(func(): _toggle_pause(false))
+	back_to_main_menu_button.pressed.connect(func(): back_to_main_menu_requested.emit())
+
+func force_set_paused(paused: bool) -> void:
+	_toggle_pause(paused)
 
 func set_hp(hp: int, max_hp: int) -> void:
 	hp_label.text = "HP: %d/%d" % [hp, max_hp]
@@ -263,6 +279,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var k := event as InputEventKey
 		if k.keycode == KEY_ESCAPE and k.pressed and not k.echo:
+			# 主選單畫面時，ESC 不允許切換暫停（避免遊戲在使用者還沒按「開始遊玩」前就被解除）
+			var main_menu := get_node_or_null("../MainMenuLayer") as CanvasLayer
+			if main_menu != null and main_menu.visible:
+				return
 			# 升級/結束畫面時不允許用 ESC 反覆切換暫停
 			if upgrade_panel and upgrade_panel.visible:
 				return
@@ -287,6 +307,17 @@ func _hide_pause() -> void:
 		pause_panel.visible = false
 
 
+func _on_pause_toggle_pressed() -> void:
+	# 模擬桌面版 ESC：升級/結束/勝利畫面時不允許切換暫停
+	if upgrade_panel and upgrade_panel.visible:
+		return
+	if game_over_panel and game_over_panel.visible:
+		return
+	if victory_panel and victory_panel.visible:
+		return
+	_toggle_pause(not _is_paused)
+
+
 func _apply_embedded_cjk_font_theme() -> void:
 	_ui_font = load(UI_FONT_PATH) as Font
 	if _ui_font == null:
@@ -297,7 +328,7 @@ func _apply_font_to_control(c: Control) -> void:
 	if _ui_font == null:
 		return
 	c.add_theme_font_override("font", _ui_font)
-	c.add_theme_font_size_override("font_size", 36)
+	c.add_theme_font_size_override("font_size", 32)
 
 
 func _get_or_create_label(parent: Node, name: String, text: String, offset: Vector2) -> Label:
@@ -320,3 +351,4 @@ func _get_or_create_button(parent: Node, name: String, text: String) -> Button:
 	b.text = text
 	_apply_font_to_control(b)
 	return b
+

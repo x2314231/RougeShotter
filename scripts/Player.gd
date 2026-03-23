@@ -81,6 +81,9 @@ func _process(delta: float) -> void:
 	var want_fire := mouse_fire or MobileControls.is_fire_joystick_active()
 	if want_fire and _time_since_shot >= fire_cooldown:
 		_time_since_shot = 0.0
+		var sfx := get_node_or_null("../SFX")
+		if sfx != null and sfx.has_method("play_player_shoot"):
+			sfx.call("play_player_shoot", global_position)
 		_shoot(dir)
 
 	# 跟隨相機（Main.tscn 裡有 Camera2D）
@@ -172,6 +175,9 @@ func take_damage(amount: int) -> void:
 	hp -= amount
 	hp_changed.emit(hp, max_hp)
 	_play_hurt_feedback()
+	var sfx := get_node_or_null("../SFX")
+	if sfx != null and sfx.has_method("play_player_hurt"):
+		sfx.call("play_player_hurt", global_position)
 	if hp <= 0:
 		is_dead = true
 		hp = 0

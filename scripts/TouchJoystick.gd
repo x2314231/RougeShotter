@@ -71,22 +71,23 @@ func _input(event: InputEvent) -> void:
 				return
 			_active_index = st.index
 			_set_finger_index(st.index)
-			var local_p: Vector2 = get_global_transform_with_canvas().affine_inverse() * pos
+			# 注意：ScreenTouch 的 position 是「視窗/螢幕座標」；Control 沒有 to_local()，
+			# 直接用全域 rect 的左上角換算成 local 座標。
+			var r := get_global_rect()
+			var local_p: Vector2 = pos - r.position
 			_update_knob_from_local(local_p)
-			get_viewport().set_input_as_handled()
 		else:
 			if st.index == _active_index:
 				_reset_joystick()
-				get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag:
 		if _active_index < 0:
 			return
 		var sd := event as InputEventScreenDrag
 		if sd.index != _active_index:
 			return
-		var local_d: Vector2 = get_global_transform_with_canvas().affine_inverse() * sd.position
+		var r2 := get_global_rect()
+		var local_d: Vector2 = sd.position - r2.position
 		_update_knob_from_local(local_d)
-		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index != MOUSE_BUTTON_LEFT:
@@ -99,15 +100,12 @@ func _input(event: InputEvent) -> void:
 			_active_index = -2
 			_set_finger_index(-2)
 			_update_knob_from_local(get_local_mouse_position())
-			get_viewport().set_input_as_handled()
 		else:
 			if _active_index == -2:
 				_reset_joystick()
-				get_viewport().set_input_as_handled()
 	elif _active_index == -2 and event is InputEventMouseMotion:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			_update_knob_from_local(get_local_mouse_position())
-			get_viewport().set_input_as_handled()
 
 
 func _set_finger_index(i: int) -> void:

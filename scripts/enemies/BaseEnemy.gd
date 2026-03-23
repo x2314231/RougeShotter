@@ -113,6 +113,9 @@ func take_damage(amount: int) -> void:
 		return
 	_play_hurt_feedback()
 	hp -= amount
+	var sfx := get_node_or_null("../SFX")
+	if sfx != null and sfx.has_method("play_enemy_hurt"):
+		sfx.call("play_enemy_hurt", global_position)
 	if hp <= 0:
 		_die()
 
@@ -137,6 +140,9 @@ func _die() -> void:
 	if _dead:
 		return
 	_dead = true
+	var sfx := get_node_or_null("../SFX")
+	if sfx != null and sfx.has_method("play_enemy_die"):
+		sfx.call("play_enemy_die", global_position)
 	# 掉落經驗/得分：用撿取物件讓「磁鐵」升級後可測試
 	_spawn_xp_pickup()
 	died.emit(score_value)
