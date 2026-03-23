@@ -1,6 +1,7 @@
 extends AudioStreamPlayer
 ## 背景音樂（BGM）管理器
-## 每一關（wave）開始時：由外部呼叫 play_random_bgm()，隨機挑選一首並循環播放。
+## 外部在遊戲開始時呼叫 play_random_bgm() 播放第一首；
+## 播放完畢後自動播放下一首（不依 wave 換歌）。
 
 # 在 Web 匯出時，`DirAccess.open("res://...")` 可能無法列舉資料夾。
 # 因此提供「預設路徑清單」確保至少能載入你專案中現有的 BGM。
@@ -10,16 +11,24 @@ extends AudioStreamPlayer
 	"res://audio/bgm/Pixelated_Horizon.wav",
 ]
 @export var bgm_dir: String = "res://audio/bgm" # 若資源打包無法列舉時，僅使用 bgm_paths
-@export var bgm_volume_db: float = -6.0
+@export var bgm_volume_db: float = -18.0
 
 var _streams: Array[AudioStream] = []
 
+var _current_stream_idx: int = -1
+
+# Web/行動裝置常見狀況：切到背景/離開頁面時音樂還會繼續播放。
+# 用 Application 通知暫停/停止，離開就關掉，回來則可選擇恢復。
+var _bgm_was_playing_before_suspend := false
+var _bgm_saved_playback_pos_sec := 0.0
+
 
 func _ready() -> void:
-	# Godot：AudioStreamPlayer 不會自動幫你 loop，我們盡可能在載入時把常見格式設成 loop。
+	# AudioStreamPlayer 依序播放時需要「不 loop」，否則 finished 不會觸發。
 	_load_streams()
 	autoplay = false
 	volume_db = bgm_volume_db
+	finished.connect(_on_bgm_finished)
 
 
 func _load_streams() -> void:
@@ -58,35 +67,56 @@ func _load_streams() -> void:
 
 
 func _try_enable_loop(s: AudioStream) -> void:
-	# 常見格式：ogg / wav
+	# 這裡名稱沿用舊版，但在「自動下一首」需求下必須關閉 loop。
+	# 常見格式：ogg / wav / mp3
 	if s is AudioStreamOggVorbis:
-		(s as AudioStreamOggVorbis).loop = true
+		(s as AudioStreamOggVorbis).loop = false
 	elif s is AudioStreamWAV:
-		# AudioStreamWAV 沒有 bool loop，改用 loop_mode。
-		# LOOP_FORWARD = 1：在 loop_begin/loop_end 間循環（若資源導入已設定 loop 點，效果最好）。
-		var wav := (s as AudioStreamWAV)
-		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
-
-		# 你的 wav 匯入設定目前多半是 loop_end=-1（循環停用狀態）。
-		# 為了避免「loop_mode 設了但範圍無效導致播完就停」，在 loop_end 無效時，
-		# 用「音長 * mix_rate」估算整段長度並寫回 loop_end。
-		var invalid_loop_end := (wav.loop_end < 0) or (wav.loop_end <= wav.loop_begin)
-		if invalid_loop_end:
-			var len_sec := wav.get_length()
-			if len_sec > 0.0:
-				var end_samples := int(len_sec * float(wav.mix_rate))
-				if end_samples > wav.loop_begin + 1:
-					wav.loop_begin = 0
-					wav.loop_end = end_samples
+		(s as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_DISABLED
 	elif s is AudioStreamMP3:
-		# MP3 的循環控制使用 loop + loop_offset（以秒為單位）
-		(s as AudioStreamMP3).loop = true
-		(s as AudioStreamMP3).loop_offset = 0.0
+		(s as AudioStreamMP3).loop = false
 
 
 func play_random_bgm() -> void:
 	if _streams.is_empty():
 		return
 	var idx := randi_range(0, _streams.size() - 1)
+	_play_index(idx)
+
+func _play_index(idx: int) -> void:
+	if idx < 0 or idx >= _streams.size():
+		return
+	_current_stream_idx = idx
 	stream = _streams[idx]
 	play()
+
+func _on_bgm_finished() -> void:
+	if _streams.is_empty():
+		return
+	if _streams.size() == 1:
+		_play_index(0)
+		return
+
+	var next_idx := _current_stream_idx
+	var tries := 0
+	while next_idx == _current_stream_idx and tries < 10:
+		next_idx = randi_range(0, _streams.size() - 1)
+		tries += 1
+	if next_idx == _current_stream_idx:
+		next_idx = (_current_stream_idx + 1) % _streams.size()
+	_play_index(next_idx)
+
+func _notification(what: int) -> void:
+	# 手機瀏覽器離開/切到背景時可能觸發這些通知
+	match what:
+		NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED:
+			if playing:
+				_bgm_was_playing_before_suspend = true
+				_bgm_saved_playback_pos_sec = get_playback_position()
+			else:
+				_bgm_was_playing_before_suspend = false
+			stop()
+		NOTIFICATION_APPLICATION_FOCUS_IN, NOTIFICATION_APPLICATION_RESUMED:
+			if _bgm_was_playing_before_suspend and stream != null:
+				play(_bgm_saved_playback_pos_sec)
+			_bgm_was_playing_before_suspend = false

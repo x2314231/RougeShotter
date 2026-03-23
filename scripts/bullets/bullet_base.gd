@@ -7,6 +7,10 @@ const ENEMY_LAYER := 2
 const WALL_LAYER := 4
 const BULLET_LAYER := 8
 
+# 若子彈在移動時緊貼牆/卡到牆邊，第一次碰撞很容易馬上就被 queue_free，
+# 看起來像「射不到遠處」。給子彈很短的安全時間，讓它先離開牆體再處理碰撞。
+const WALL_HIT_GRACE_SEC := 0.08
+
 const GROUP_WALL := "wall"
 const GROUP_ENEMY := "enemy"
 const GROUP_PLAYER := "player"
@@ -109,6 +113,8 @@ func _handle_hit(collider: Object, normal: Vector2) -> void:
 		return
 
 	if collider.is_in_group(GROUP_WALL):
+		if bullet_owner == "player" and _age < WALL_HIT_GRACE_SEC:
+			return
 		queue_free()
 		return
 

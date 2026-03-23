@@ -2,8 +2,6 @@ extends Node
 
 var player: Node
 var ui: Node
-var _bgm: Node
-var _bgm_played_wave: int = -1
 
 @export var total_waves: int = 10
 const GROUP_ENEMY := "enemy"
@@ -14,6 +12,14 @@ var enemies_alive: int = 0
 var prev_wave_enemy_count: int = 0
 
 var rng := RandomNumberGenerator.new()
+
+# ========= 玩家等級系統（依 Score 自動升級） =========
+var player_level: int = 1
+const SCORE_TO_LV2: int = 80
+const SCORE_LV_SCALE: float = 2
+
+var _level_up_waiting: bool = false
+var _pending_start_wave: int = -1
 
 # ========= 玩家基準值（用於重開重置） =========
 var _base_max_hp: int
@@ -29,6 +35,7 @@ var _base_dot_duration: float
 var _base_knockback_strength: float
 var _base_pickup_radius: float
 var _base_orbital_blades: bool
+var _base_orbital_blades_upgrades: int
 var _base_gaster_blaster: bool
 var _base_gaster_blaster_count: int
 
@@ -61,13 +68,12 @@ func _ready() -> void:
 		push_error("找不到 GameUI，請確認 Main.tscn 內有節點名稱 GameUI。")
 		return
 
-	_bgm = get_node_or_null("../BGM") as Node
-
 	_cache_player_baselines()
 	_connect_signals()
 	ui.set_wave(current_wave, total_waves)
 	ui.set_hp(player.hp, player.max_hp)
 	ui.set_score(score)
+	_update_level_ui()
 
 	start_wave(1)
 
@@ -78,12 +84,6 @@ func _process(delta: float) -> void:
 	_time_until_next_batch -= delta
 	if _time_until_next_batch > 0.0:
 		return
-
-	# 每波第一次生成前，隨機播放一首 BGM（並嘗試循環播放）
-	if current_wave != _bgm_played_wave:
-		if _bgm != null and _bgm.has_method("play_random_bgm"):
-			_bgm.call("play_random_bgm")
-		_bgm_played_wave = current_wave
 
 	_spawn_current_batch()
 	_spawn_batch_index += 1
@@ -110,6 +110,7 @@ func _cache_player_baselines() -> void:
 	_base_knockback_strength = float(player.knockback_strength)
 	_base_pickup_radius = float(player.pickup_radius)
 	_base_orbital_blades = bool(player.orbital_blades_enabled)
+	_base_orbital_blades_upgrades = int(player.orbital_blades_upgrades)
 	_base_gaster_blaster = bool(player.gaster_blaster_enabled)
 	_base_gaster_blaster_count = int(player.gaster_blaster_count)
 
@@ -124,6 +125,81 @@ func add_score(amount: int) -> void:
 	score += amount
 	if ui:
 		ui.set_score(score)
+		_maybe_level_up()
+
+func _score_threshold_for_level(lv: int) -> int:
+	if lv <= 1:
+		return 0
+	if lv == 2:
+		return SCORE_TO_LV2
+	var thr := SCORE_TO_LV2
+	for cur_lv in range(3, lv + 1):
+		thr = int(ceilf(float(thr) * SCORE_LV_SCALE))
+	return thr
+
+func _update_level_ui() -> void:
+	if ui == null:
+		return
+	var cur_thr := _score_threshold_for_level(player_level)
+	var next_thr := _score_threshold_for_level(player_level + 1)
+	var exp_value := maxi(0, score - cur_thr)
+	var exp_max := maxi(1, next_thr - cur_thr)
+	ui.set_player_level(player_level, exp_value, exp_max)
+
+func _maybe_level_up() -> void:
+	# 當分數跨過下一級門檻時，顯示「三選一」升級面板讓玩家選。
+	# 玩家選完後才會把 player_level +1，並套用升級效果。
+	if _level_up_waiting:
+		_update_level_ui()
+		return
+
+	var next_lv := player_level + 1
+	var next_thr := _score_threshold_for_level(next_lv)
+
+	if score >= next_thr:
+		_level_up_waiting = true
+		_show_level_up_menu()
+
+	# 只要 Score 成長，都要刷新經驗值條（升級面板開啟時也要顯示滿條）
+	_update_level_ui()
+
+func _show_level_up_menu() -> void:
+	# 顯示三選一升級面板（升到下一級後玩家才會看到效果生效）
+	var pool := _upgrade_pool()
+	var choices: Array[Dictionary] = []
+
+	while choices.size() < 3 and pool.size() > 0:
+		var idx := rng.randi_range(0, pool.size() - 1)
+		choices.append(pool[idx])
+		pool.remove_at(idx)
+
+	ui.show_upgrade_menu(choices)
+	# 下一幀再停下遊戲邏輯，避免點擊剛開啟的按鈕時被暫停吞掉
+	call_deferred("_set_game_paused", true)
+
+func _on_upgrade_chosen(upgrade_id: String) -> void:
+	if not _level_up_waiting:
+		return
+
+	# 套用升級效果（可堆疊）
+	ui.hide_upgrade_menu()
+	_apply_upgrade_to_player(upgrade_id)
+
+	# 下一級「確定」後才把 LV +1
+	player_level += 1
+	_level_up_waiting = false
+
+	_set_game_paused(false)
+	_update_level_ui()
+
+	# 如果 Score 已經夠下一級，也會繼續再開下一輪三選一
+	_maybe_level_up()
+
+	# 若正好沒有下一輪升級，才開始下一波（避免玩家還在選升級時波次已提前切走）
+	if not _level_up_waiting and _pending_start_wave >= 0:
+		var w := _pending_start_wave
+		_pending_start_wave = -1
+		start_wave(w)
 
 
 func _update_terrain_background() -> void:
@@ -148,7 +224,7 @@ func start_wave(wave: int) -> void:
 
 	var enemy_count: int
 	if wave == 1:
-		enemy_count = rng.randi_range(8, 16)
+		enemy_count = rng.randi_range(50, 80)
 	else:
 		enemy_count = int(max(1, prev_wave_enemy_count * rng.randf_range(1.25, 1.5)))
 	prev_wave_enemy_count = enemy_count
@@ -253,7 +329,7 @@ func _apply_enemy_config(e: Node, t: String) -> void:
 	# A紅 B黃 C綠 D紫 E橘
 	if t == "A":
 		e.max_hp = 3
-		e.move_speed = 90.0
+		e.move_speed = 110.0
 		e.melee_range = 65.0
 		e.enable_ranged = false
 		e.enable_dash = false
@@ -274,7 +350,7 @@ func _apply_enemy_config(e: Node, t: String) -> void:
 		e.xp_value = 1
 	elif t == "C":
 		e.max_hp = 1
-		e.move_speed = 150.0
+		e.move_speed = 200.0
 		e.enable_dash = true
 		e.melee_range = 90.0
 		e.dash_speed_multiplier = 3.0
@@ -286,7 +362,7 @@ func _apply_enemy_config(e: Node, t: String) -> void:
 		e.score_value = 14
 		e.xp_value = 1
 	elif t == "D":
-		e.max_hp = 5
+		e.max_hp = 10
 		e.move_speed = 60.0
 		e.melee_range = 70.0
 		e.enable_ranged = false
@@ -296,7 +372,7 @@ func _apply_enemy_config(e: Node, t: String) -> void:
 		e.score_value = 18
 		e.xp_value = 2
 	elif t == "E":
-		e.max_hp = 3
+		e.max_hp = 5
 		e.move_speed = 75.0
 		e.enable_ring = true
 		e.ring_interval = 2.2
@@ -307,7 +383,7 @@ func _apply_enemy_config(e: Node, t: String) -> void:
 		e.score_value = 16
 		e.xp_value = 1
 	elif t == "BOSS":
-		e.max_hp = 50
+		e.max_hp = 300
 		e.move_speed = 35.0
 		e.melee_range = 90.0
 
@@ -317,8 +393,8 @@ func _apply_enemy_config(e: Node, t: String) -> void:
 		e.ranged_interval = 0.9
 		e.ranged_bullet_speed = 340.0
 
-		# D 特性：坦型血量與慢移
-		e.enable_dash = false
+		# C 特性：高速衝刺
+		e.enable_dash = true
 
 		# E 特性：定時 360 度環形子彈
 		e.enable_ring = true
@@ -347,6 +423,11 @@ func _on_wave_cleared() -> void:
 	_wave_cleared_busy = true
 	# Wave 10 由 boss 死亡觸發勝利
 	if current_wave >= total_waves:
+		# 勝利優先：如果剛好正在升級選單中，先關掉避免畫面疊在一起
+		if ui != null:
+			ui.hide_upgrade_menu()
+		_level_up_waiting = false
+		_pending_start_wave = -1
 		ui.show_victory(score)
 		# 先顯示畫面，再下一個 frame 才暫停，避免點不到
 		await get_tree().process_frame
@@ -357,30 +438,11 @@ func _on_wave_cleared() -> void:
 	for b in get_tree().get_nodes_in_group("bullet"):
 		b.queue_free()
 
-	show_upgrade_menu()
+	# 若目前正因等級升級而暫停中，延後切下一波，避免波次/標籤在玩家選擇升級時突然變動
+	if _level_up_waiting:
+		_pending_start_wave = current_wave + 1
+		return
 
-func show_upgrade_menu() -> void:
-	# 每關結束三選一
-	var pool := _upgrade_pool()
-	var choices: Array[Dictionary] = []
-
-	while choices.size() < 3 and pool.size() > 0:
-		var idx := rng.randi_range(0, pool.size() - 1)
-		choices.append(pool[idx])
-		pool.remove_at(idx)
-
-	ui.show_upgrade_menu(choices)
-	# 先顯示選單再下一個 frame 才暫停，避免同幀切換 pause 導致點不到
-	await get_tree().process_frame
-	_set_game_paused(true)
-
-func _on_upgrade_chosen(upgrade_id: String) -> void:
-	ui.hide_upgrade_menu()
-	_set_game_paused(false)
-
-	_apply_upgrade_to_player(upgrade_id)
-
-	# 切下一關
 	start_wave(current_wave + 1)
 
 func _apply_upgrade_to_player(upgrade_id: String) -> void:
@@ -416,6 +478,7 @@ func _apply_upgrade_to_player(upgrade_id: String) -> void:
 		player.bounce_count += 1
 	elif upgrade_id == "orbital_blades":
 		player.orbital_blades_enabled = true
+		player.orbital_blades_upgrades += 1
 		player._ensure_orbital_blades()
 	elif upgrade_id == "gaster_blaster":
 		player.gaster_blaster_enabled = true
@@ -459,6 +522,10 @@ func restart_game() -> void:
 	prev_wave_enemy_count = 0
 	ui.set_wave(current_wave, total_waves)
 	ui.set_score(score)
+	player_level = 1
+	_level_up_waiting = false
+	_pending_start_wave = -1
+	_update_level_ui()
 
 	start_wave(1)
 
@@ -488,6 +555,7 @@ func _reset_player() -> void:
 	player.knockback_strength = _base_knockback_strength
 	player.pickup_radius = _base_pickup_radius
 	player.orbital_blades_enabled = _base_orbital_blades
+	player.orbital_blades_upgrades = _base_orbital_blades_upgrades
 	player.gaster_blaster_enabled = _base_gaster_blaster
 	player.gaster_blaster_count = _base_gaster_blaster_count
 	player._reset_weapon_upgrades()

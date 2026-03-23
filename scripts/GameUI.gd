@@ -12,6 +12,34 @@ var hp_label: Label
 var hp_bar: ProgressBar
 var score_label: Label
 var wave_label: Label
+var lv_label: Label
+var exp_lv_label: Label
+var exp_bar_bg: ColorRect
+var exp_bar_fill: ColorRect
+
+var score_exp_fill: ColorRect
+const SCORE_BAR_BORDER := 4
+var hp_fill: ColorRect
+const HP_BAR_BORDER := 4
+const HP_BAR_PANEL_WIDTH := 260.0
+
+const HP_INNER_WIDTH := 13
+const EXP_INNER_WIDTH := 17
+
+func _pad_spaces(count: int) -> String:
+	var s := ""
+	for _i in range(count):
+		s += " "
+	return s
+
+func _center_text(content: String, inner_width: int) -> String:
+	var n := content.length()
+	if n >= inner_width:
+		return content
+	var total_pad := inner_width - n
+	var left_pad := total_pad / 2
+	var right_pad := total_pad - left_pad
+	return _pad_spaces(left_pad) + content + _pad_spaces(right_pad)
 
 var upgrade_panel: PanelContainer
 var upgrade_title: Label
@@ -64,25 +92,89 @@ func _build_ui() -> void:
 		top_hud.offset_top = 10
 		# 錨點全在左上時：right/bottom 為相對父視窗左／上邊的絕對位置，寬高 = right-left、bottom-top
 		top_hud.offset_right = 10 + 420
-		top_hud.offset_bottom = 10 + 80
+		top_hud.offset_bottom = 10 + 140
 
-	hp_label = _get_or_create_label(top_hud, "HpLabel", "HP: 5/5", Vector2(0, 0))
+	# ----- Top-Left HUD (圖形介面樣式) -----
+	# HP: 黃色底 + 黑色「5/5」
+	var hp_panel := PanelContainer.new()
+	hp_panel.name = "HpBarPanel"
+	hp_panel.position = Vector2(0, 0)
+	hp_panel.size = Vector2(260, 44)
+	var hp_sb := StyleBoxFlat.new()
+	# 外框底色（空時會露出來）
+	hp_sb.bg_color = Color(0.05, 0.05, 0.05, 0.6)
+	hp_sb.border_color = Color(0.6, 0.1, 0.0, 1.0)
+	hp_sb.border_width_left = 4
+	hp_sb.border_width_top = 4
+	hp_sb.border_width_right = 4
+	hp_sb.border_width_bottom = 4
+	hp_panel.add_theme_stylebox_override("panel", hp_sb)
+	top_hud.add_child(hp_panel)
 
-	hp_bar = top_hud.get_node_or_null("HpBar") as ProgressBar
-	if hp_bar == null:
-		hp_bar = ProgressBar.new()
-		hp_bar.name = "HpBar"
-		top_hud.add_child(hp_bar)
-	hp_bar.position = Vector2(0, 22)
-	hp_bar.custom_minimum_size = Vector2(240, 18)
-	hp_bar.size = Vector2(240, 18)
-	hp_bar.show_percentage = false
-	hp_bar.max_value = 5.0
-	hp_bar.value = 5.0
-	hp_bar.step = 1.0
+	hp_fill = ColorRect.new()
+	hp_fill.name = "HpFill"
+	hp_fill.position = Vector2(HP_BAR_BORDER, HP_BAR_BORDER)
+	hp_fill.size = Vector2(hp_panel.size.x - HP_BAR_BORDER * 2, hp_panel.size.y - HP_BAR_BORDER * 2)
+	hp_fill.color = Color(1.0, 1.0, 0.0, 1.0)
+	hp_panel.add_child(hp_fill)
 
-	score_label = _get_or_create_label(top_hud, "ScoreLabel", "Score: 0", Vector2(0, 48))
-	wave_label = _get_or_create_label(top_hud, "WaveLabel", "Wave: 1/10", Vector2(0, 76))
+	hp_label = Label.new()
+	hp_label.name = "HpLabel"
+	hp_panel.add_child(hp_label)
+	hp_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hp_label.offset_left = 0
+	hp_label.offset_top = 0
+	hp_label.offset_right = 0
+	hp_label.offset_bottom = 0
+	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hp_label.modulate = Color(0, 0, 0, 1)
+	_apply_font_to_control(hp_label)
+	hp_label.text = "5/5"
+
+	# Score: 藍白底 + 黑色「12345」
+	var score_panel := PanelContainer.new()
+	score_panel.name = "ScorePanel"
+	score_panel.position = Vector2(0, 60)
+	score_panel.size = Vector2(260, 44)
+	var score_sb := StyleBoxFlat.new()
+	# 底色先用較深的藍白色，經驗值由上層 ColorRect（淺藍）動態填滿
+	score_sb.bg_color = Color(0.2, 0.4, 0.55, 1.0)
+	score_sb.border_color = Color(0.0, 0.5, 1.0, 1.0)
+	score_sb.border_width_left = 4
+	score_sb.border_width_top = 4
+	score_sb.border_width_right = 4
+	score_sb.border_width_bottom = 4
+	score_panel.add_theme_stylebox_override("panel", score_sb)
+	top_hud.add_child(score_panel)
+
+	score_exp_fill = ColorRect.new()
+	score_exp_fill.name = "ScoreExpFill"
+	score_exp_fill.position = Vector2(SCORE_BAR_BORDER, SCORE_BAR_BORDER)
+	score_exp_fill.size = Vector2(0, score_panel.size.y - SCORE_BAR_BORDER * 2)
+	score_exp_fill.color = Color(0.62, 0.93, 1.0, 1.0) # 淺藍：經驗值填充
+	score_exp_fill.visible = true
+	score_panel.add_child(score_exp_fill)
+
+	score_label = Label.new()
+	score_label.name = "ScoreLabel"
+	score_panel.add_child(score_label)
+	score_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	score_label.offset_left = 0
+	score_label.offset_top = 0
+	score_label.offset_right = 0
+	score_label.offset_bottom = 0
+	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	score_label.modulate = Color(0, 0, 0, 1)
+	_apply_font_to_control(score_label)
+	score_label.text = "0"
+
+	# LV：在 Score bar 右側
+	lv_label = _get_or_create_label(top_hud, "LvLabel", "LV1", Vector2(270, 58))
+
+	# Wave：第三行
+	wave_label = _get_or_create_label(top_hud, "WaveLabel", "Wave:1/10", Vector2(0, 104))
 
 	# ----- Pause button (mobile/web) -----
 	# 桌面版用 ESC；手機/Web 顯示右上角暫停按鈕。
@@ -229,16 +321,31 @@ func force_set_paused(paused: bool) -> void:
 	_toggle_pause(paused)
 
 func set_hp(hp: int, max_hp: int) -> void:
-	hp_label.text = "HP: %d/%d" % [hp, max_hp]
-	if hp_bar != null:
-		hp_bar.max_value = float(max_hp)
-		hp_bar.value = float(hp)
+	hp_label.text = "%d/%d" % [hp, max_hp]
+	if hp_fill != null and max_hp > 0:
+		var maxv := maxi(1, max_hp)
+		var ratio := clampf(float(hp) / float(maxv), 0.0, 1.0)
+		var inner_w := HP_BAR_PANEL_WIDTH - HP_BAR_BORDER * 2.0
+		hp_fill.size = Vector2(inner_w * ratio, hp_fill.size.y)
 
 func set_score(score: int) -> void:
-	score_label.text = "Score: %d" % score
+	score_label.text = "%d" % score
 
 func set_wave(wave: int, total_waves: int) -> void:
-	wave_label.text = "Wave: %d/%d" % [wave, total_waves]
+	wave_label.text = "Wave:%d/%d" % [wave, total_waves]
+
+func set_player_level(level: int, _exp_value: int, _exp_max: int) -> void:
+	if lv_label:
+		lv_label.text = "LV%d" % level
+	if score_exp_fill and _exp_max > 0:
+		var maxv := maxi(1, _exp_max)
+		var v := clampi(_exp_value, 0, maxv)
+		# exp_value=0 時強制清空，避免偶發顯示為滿條
+		var ratio := 0.0
+		if v > 0:
+			ratio = float(v) / float(maxv)
+		ratio = clampf(ratio, 0.0, 1.0)
+		score_exp_fill.size = Vector2((260 - SCORE_BAR_BORDER * 2) * ratio, score_exp_fill.size.y)
 
 func show_upgrade_menu(options: Array[Dictionary]) -> void:
 	upgrade_title.text = "三選一升級"

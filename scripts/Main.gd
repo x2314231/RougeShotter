@@ -7,6 +7,7 @@ extends Node2D
 @onready var _game_ui: Node = $GameUI
 @onready var _level_manager: Node = $LevelManager
 @onready var _player: Node = $Player
+@onready var _bgm: Node = $BGM
 
 const SETTINGS_PATH := "user://settings.cfg"
 
@@ -62,6 +63,8 @@ func _on_start_game_requested() -> void:
 	if _game_ui != null and _game_ui.has_method("force_set_paused"):
 		_game_ui.call("force_set_paused", false)
 	_set_game_still(false)
+	if _bgm != null and _bgm.has_method("play_random_bgm"):
+		_bgm.call("play_random_bgm")
 
 
 func _on_exit_game_requested() -> void:
@@ -75,6 +78,8 @@ func _on_back_to_main_menu_requested() -> void:
 	if _game_ui != null and _game_ui.has_method("force_set_paused"):
 		_game_ui.call("force_set_paused", false)
 	_set_game_still(true)
+	if _bgm != null and _bgm.has_method("stop"):
+		_bgm.call("stop")
 
 
 func _set_game_still(still: bool) -> void:

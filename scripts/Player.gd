@@ -12,8 +12,8 @@ signal player_died(total_score: int)
 @export var bullet_count: int = 1 # 彈幕：每次射擊子彈數量
 @export var spread_degrees: float = 14.0 # 散彈總張角（當 bullet_count > 1 生效）
 
-@export var fire_cooldown: float = 0.42 # 子彈發射冷卻（秒，越大越慢）
-@export var bullet_lifetime: float = 2.0
+@export var fire_cooldown: float = 0.22 # 子彈發射冷卻（秒，越大越慢）
+@export var bullet_lifetime: float = 3.0
 
 @export var penetration_count: int = 0 # 貫穿：額外可穿透的敵人數（0 = 不穿透）
 @export var bounce_count: int = 0 # 彈跳：子彈反彈次數
@@ -41,6 +41,9 @@ const GASTER_BLASTER_SCENE := preload("res://scenes/player/GasterBlaster.tscn")
 
 ## 升級：迴旋刀片 / Gaster Blaster（由 LevelManager 開關）
 var orbital_blades_enabled: bool = false
+## 迴旋刀片疊加次數：每次升級會讓刀片數 +1
+## （總刀片 = orbital_blades_upgrades + 1；第一次升級後仍保持原本 2 把刀片）
+var orbital_blades_upgrades: int = 0
 var gaster_blaster_enabled: bool = false
 ## 每選一次 Gaster Blaster +1；每輪依此數量召喚多架（間隔見 GasterBlaster.gd）
 var gaster_blaster_count: int = 0
@@ -152,7 +155,7 @@ func _spawn_bullet(angle: float) -> void:
 	var b := PLAYER_BULLET_SCENE.instantiate()
 	var dir := Vector2.RIGHT.rotated(angle)
 	# 子彈生成點稍微往外推，避免和玩家碰撞體在同幀發生接觸造成「後座/強制位移」的錯覺
-	b.global_position = muzzle.global_position + dir * 6.0
+	b.global_position = muzzle.global_position + dir * 18.0
 	get_tree().current_scene.add_child(b)
 
 	# 角色子彈只打敵人/牆面（避免誤傷自己）
@@ -231,10 +234,13 @@ func deal_weapon_hit_to_enemy(body: Node) -> void:
 func _ensure_orbital_blades() -> void:
 	if not orbital_blades_enabled:
 		return
-	if _orbital_weapon != null:
-		return
-	_orbital_weapon = ORBITAL_BLADES_SCENE.instantiate() as Node2D
-	add_child(_orbital_weapon)
+	if _orbital_weapon == null:
+		_orbital_weapon = ORBITAL_BLADES_SCENE.instantiate() as Node2D
+		add_child(_orbital_weapon)
+	# 升級可以堆疊：即使已存在刀片也要更新數量
+	var blade_total := maxi(1, orbital_blades_upgrades + 1)
+	if _orbital_weapon != null and _orbital_weapon.has_method("set_blade_count"):
+		_orbital_weapon.call("set_blade_count", blade_total)
 
 
 func _ensure_gaster_blaster() -> void:

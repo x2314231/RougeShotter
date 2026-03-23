@@ -35,8 +35,28 @@ func _update_center() -> void:
 	_center = size * 0.5
 
 
-func _refresh_joystick_rect() -> void:
+## 實際可觸發的接觸範圍（畫面左下只允許 MOVE、右下只允許 FIRE）
+## 用這個 rect 同步影響：
+## - 搖桿是否接收觸控（在 _input 判斷）
+## - MobileControls 是否排除「空白處觸控瞄準」（在 _refresh_joystick_rect 設定）
+func _get_activation_rect() -> Rect2:
 	var r := get_global_rect()
+	var vp := get_viewport_rect()
+	# 視窗左上為 (0,0) 的座標系；EventScreenTouch.position 也使用此座標。
+	if vp.size.x <= 0.0 or vp.size.y <= 0.0:
+		return r
+	var half_w := vp.size.x * 0.5
+	var half_h := vp.size.y * 0.5
+	var clip: Rect2
+	if role == Role.MOVE:
+		clip = Rect2(vp.position.x, vp.position.y + half_h, half_w, half_h)
+	else:
+		clip = Rect2(vp.position.x + half_w, vp.position.y + half_h, half_w, half_h)
+	return r.intersection(clip)
+
+
+func _refresh_joystick_rect() -> void:
+	var r := _get_activation_rect()
 	if role == Role.MOVE:
 		MobileControls.set_joystick_rect(r)
 	else:
@@ -67,7 +87,7 @@ func _input(event: InputEvent) -> void:
 		if st.pressed:
 			if _active_index != -1:
 				return
-			if not get_global_rect().has_point(pos):
+			if not _get_activation_rect().has_point(pos):
 				return
 			_active_index = st.index
 			_set_finger_index(st.index)
@@ -95,7 +115,7 @@ func _input(event: InputEvent) -> void:
 		if mb.pressed:
 			if _active_index != -1:
 				return
-			if not get_global_rect().has_point(get_global_mouse_position()):
+			if not _get_activation_rect().has_point(get_global_mouse_position()):
 				return
 			_active_index = -2
 			_set_finger_index(-2)
