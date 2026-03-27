@@ -1,35 +1,36 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://cec02d7fg4j0k"]
 
-[ext_resource type="Script" path="res://scripts/Player.gd" id="1_1"]
-[ext_resource type="Script" path="res://scripts/DebugCircleVisual.gd" id="2_1"]
+[ext_resource type="Script" uid="uid://c58w756n4i4cp" path="res://scripts/Player.gd" id="1_1"]
+[ext_resource type="SpriteFrames" uid="uid://spaegrcxk5ow" path="res://image/PlayerSpriteFrames.tres" id="2_frames"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_a" radius=14.0]
-[sub_resource type="CircleShape2D" id="CircleShape2D_b" radius=16.0]
+[sub_resource type="CircleShape2D" id="CircleShape2D_a"]
 
-[node name="Player" type="CharacterBody2D"]
-collision_layer = 1
+[sub_resource type="CircleShape2D" id="CircleShape2D_b"]
+
+[node name="Player" type="CharacterBody2D" unique_id=273542735]
 collision_mask = 2
 script = ExtResource("1_1")
-max_hp = 5
 fire_cooldown = 0.42
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=929107834]
 shape = SubResource("CircleShape2D_a")
 
-[node name="Muzzle" type="Marker2D" parent="."]
+[node name="Muzzle" type="Marker2D" parent="." unique_id=626626332]
 position = Vector2(24, 0)
 
-[node name="HurtArea" type="Area2D" parent="."]
-monitoring = true
-monitorable = false
-collision_layer = 1
+[node name="HurtArea" type="Area2D" parent="." unique_id=1829750053]
 collision_mask = 2
+monitorable = false
 
-[node name="HurtShape" type="CollisionShape2D" parent="HurtArea"]
+[node name="HurtShape" type="CollisionShape2D" parent="HurtArea" unique_id=775700531]
 shape = SubResource("CircleShape2D_b")
 
-[node name="Visual" type="Node2D" parent="."]
-script = ExtResource("2_1")
-radius = 14.0
-fill_color = Color(0.2, 0.8, 1.0, 1.0)
+[node name="Visual" type="AnimatedSprite2D" parent="." unique_id=1624833034]
+texture_filter = 1
+scale = Vector2(0.3, 0.3)
+sprite_frames = ExtResource("2_frames")
+animation = &"run"
+offset = Vector2(-30, 0)
 
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1740330060]
+scale = Vector2(0.2, 0.2)

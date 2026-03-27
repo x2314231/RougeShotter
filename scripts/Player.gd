@@ -51,14 +51,16 @@ var _orbital_weapon: Node2D = null
 var _gaster_weapon: Node2D = null
 
 @onready var muzzle: Marker2D = $Muzzle
-@onready var _body_visual: Node2D = $Visual
+@onready var _body_visual: AnimatedSprite2D = $Visual
 
 var _hurt_flash_tween: Tween
+var _muzzle_base_local: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	add_to_group("player")
 	hp = max_hp
 	hp_changed.emit(hp, max_hp)
+	_muzzle_base_local = muzzle.position
 
 	# Player 只用來被子彈命中；不與其他物理體互相推擠
 	collision_layer = PLAYER_LAYER
@@ -66,13 +68,14 @@ func _ready() -> void:
 	# （敵方子彈在 EnemyBullet / BulletBase 內會把 collision_mask 設為包含 PLAYER_LAYER）
 	collision_mask = ENEMY_LAYER
 
+
 func _process(delta: float) -> void:
 	if is_dead:
 		return
 	# 瞄準：滑鼠／觸控第二指；僅搖桿時（觸控網頁）用移動方向當炮口方向
 	var dir := _aim_world_delta()
 	if dir.length_squared() > 0.0001:
-		rotation = dir.angle()
+		_apply_aim_pose(dir)
 
 	# 射擊：滑鼠左鍵，或右側開火搖桿。Web 觸控會把單指模擬成滑鼠左鍵，推左搖桿移動時勿當成開火。
 	_time_since_shot += delta
@@ -106,6 +109,14 @@ func _physics_process(_delta: float) -> void:
 	velocity = input_vec * move_speed
 	move_and_slide()
 
+	if _body_visual != null and _body_visual.sprite_frames != null:
+		if velocity.length_squared() > 1.0:
+			if _body_visual.animation != "run":
+				_body_visual.play("run")
+		else:
+			if _body_visual.animation != "idle":
+				_body_visual.play("idle")
+
 	# 簡單限制：不要離開視野太遠
 	var cam := get_node_or_null("../Camera2D")
 	if cam:
@@ -128,6 +139,28 @@ func _aim_world_delta() -> Vector2:
 		if MobileControls.joystick_vector.length_squared() > 0.01:
 			return MobileControls.joystick_vector * 200.0
 	return get_global_mouse_position() - global_position
+
+
+func _apply_aim_pose(dir: Vector2) -> void:
+	# 左半邊用鏡像翻轉處理，旋轉角限制在 ±90 度，避免角色倒轉。
+	var facing_left := dir.x < 0.0
+	var pose_dir := dir
+	if facing_left:
+		pose_dir.x = -pose_dir.x
+
+	var ang := pose_dir.angle()
+	# flip_h 會在父節點旋轉下造成視覺旋轉方向反轉，左邊需再把角度取反才不會上下顛倒
+	if facing_left:
+		ang = -ang
+	rotation = clampf(ang, -PI * 0.5, PI * 0.5)
+
+	if _body_visual != null:
+		_body_visual.flip_h = facing_left
+
+	# 槍口在左右面向時切換到正確側，避免子彈看起來從背後射出
+	if muzzle != null:
+		var muzzle_x := absf(_muzzle_base_local.x)
+		muzzle.position = Vector2(-muzzle_x if facing_left else muzzle_x, _muzzle_base_local.y)
 
 
 func _shoot(raw_dir: Vector2) -> void:
